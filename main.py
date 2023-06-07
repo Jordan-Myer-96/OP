@@ -1,8 +1,14 @@
 import os
 import pickle
-import aram_functions as af
+from aram_functions import get_summoner_id, get_match_history, get_matches_with_summoners
 
 regenerate_data = True
+limit = 10
+api_call_counter = 0
+#"Zero Jg Pressure", "LightNephilim", "Nickozz","Pueo","Zhanababy"
+
+summoner_name = "LightNephilim"  # match history to look through
+summoner_names = ["Zero Jg Pressure", "LightNephilim", "Nickozz","Pueo","Zhanababy"]
 
 if regenerate_data and os.path.exists('match_data.pkl'):
     os.remove('match_data.pkl')
@@ -13,17 +19,12 @@ if os.path.exists('match_data.pkl'):
         matches_with_summoners, match_details, win_rate = pickle.load(f)      
 else:
     # Generate match_details
-    limit = 50
-    summoner_name = "Zero Jg Pressure"  # replace with the actual summoner name
-    summoner_names = ["Zero Jg Pressure","Nickozz"]
-
-    match_history = af.get_match_history(summoner_name,limit)
-    matches_with_summoners, match_details, win_rate = af.get_matches_with_summoners(match_history,summoner_names)
+    
+    match_history = get_match_history(summoner_name,limit,api_call_counter)
+    matches_with_summoners, match_details, win_rate = get_matches_with_summoners(match_history,summoner_names,api_call_counter)
     # Save match_details to file
     with open('match_data.pkl', 'wb') as f:
         pickle.dump((matches_with_summoners, match_details, win_rate), f)
-
-print(match_details)
 
 consolidated_details = {}
 for detail in match_details:

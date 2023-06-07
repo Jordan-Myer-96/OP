@@ -25,13 +25,16 @@ def download_champion_data():
         print("Error Code", response.status_code)
         return None
 
-def get_summoner_id(summoner_name):
+def get_summoner_id(summoner_name,api_call_counter):
     base_url = f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner_name}"
     headers = {
         "X-Riot-Token": API_KEY
     }
     response = requests.get(base_url, headers=headers)
     
+    api_call_counter += 1
+    print(f"API calls made: {api_call_counter} - get_summoner_id")
+
     if response.status_code == 200:
         data = response.json()
         return data['puuid']
@@ -39,15 +42,18 @@ def get_summoner_id(summoner_name):
         print("Error Code", response.status_code)
         return None
     
-def get_match_history(summoner_name,limit):
+def get_match_history(summoner_name,limit,api_call_counter):
 
-    puuid = get_summoner_id(summoner_name)
+    puuid = get_summoner_id(summoner_name,api_call_counter)
     base_url = f"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={limit}"
     headers = {
         "X-Riot-Token": API_KEY
     }
     response = requests.get(base_url, headers=headers)
-    
+
+    api_call_counter += 1
+    print(f"API calls made: {api_call_counter} - get_match_history")
+
     if response.status_code == 200:
         data = response.json()
         return(data)
@@ -59,7 +65,7 @@ def get_match_history(summoner_name,limit):
         return(None)
 
 
-def get_matches_with_summoners(match_ids, summoner_names):
+def get_matches_with_summoners(match_ids, summoner_names,api_call_counter):
     """Find matches where all the specified summoners participated."""
     matches_with_summoners = []
     match_details = []  # list to hold match details
@@ -70,7 +76,9 @@ def get_matches_with_summoners(match_ids, summoner_names):
             "X-Riot-Token": API_KEY
         }
         response = requests.get(base_url, headers=headers)
-        
+
+        api_call_counter += 1
+        print(f"API calls made: {api_call_counter} - get_matches_with_summoners")
         # Add a delay after each request to prevent hitting rate limit
         time.sleep(1.2)
 
