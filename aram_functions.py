@@ -1,6 +1,8 @@
 import requests
 import time
 import json
+import datetime
+import pickle
 
 # Define API key globally
 API_KEY = "RGAPI-d4c56a04-1227-400c-b541-c38b65337c81"  # Replace with your API key
@@ -37,7 +39,9 @@ def get_summoner_id(summoner_name):
         print("Error Code", response.status_code)
         return None
     
-def get_match_history(puuid,limit):
+def get_match_history(summoner_name,limit):
+
+    puuid = get_summoner_id(summoner_name)
     base_url = f"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={limit}"
     headers = {
         "X-Riot-Token": API_KEY
@@ -82,9 +86,10 @@ def get_matches_with_summoners(match_ids, summoner_names):
                         if participant['summonerName'] == summoner:
                             match_details.append({
                                 'match_id': match_id,
+                                'game_creation': datetime.datetime.fromtimestamp(data['info']['gameCreation'] / 1000).strftime('%Y-%m-%d %H:%M'),
                                 'summoner_name': summoner,
                                 'win': participant['win'],
-                                'champion': champion_id_to_name[str(participant['championId'])],
+                                'champion': champion_id_to_name.get(str(participant['championId']), 'Unknown champion'),
                                 'kills': participant['kills'],
                                 'assists': participant['assists'],
                                 'deaths': participant['deaths'],
@@ -99,61 +104,10 @@ def get_matches_with_summoners(match_ids, summoner_names):
     total_wins = sum(detail['win'] for detail in match_details)
     win_rate = total_wins / total_games * 100
     
-    print(f'Win Rate: {win_rate}%')
-    
-    return matches_with_summoners, match_details
+    return matches_with_summoners, match_details, win_rate
 
-
-def get_match_details(match_id, summoner_names):
-    base_url = f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    headers = {
-        "X-Riot-Token": API_KEY
-    }
-    response = requests.get(base_url, headers=headers)
-
-    if response.status_code == 200:
-        data = response.json()
-        participants = data['info']['participants']
-        details = {}
-        for summoner_name in summoner_names:
-            for participant in participants:
-                if participant['summonerName'] == summoner_name:
-                    # Fetch the champion name using its ID
-                    champion_id = participant['championId']
-                    champion_name = champion_id_to_name.get(str(champion_id), 'Unknown champion')
-                    details[summoner_name] = {'win': participant['win'], 'champion': champion_name}
-        return details
-    else:
-        print("Error Code", response.status_code)
-        return None
-
-
-summoner_name = "Zero Jg Pressure"  # replace with the actual summoner name
-summoner_names = ["Zero Jg Pressure","Nickozz"]
 
 #champion_data = download_champion_data()
 with open('champion.json', 'r') as f:
     champion_data = json.load(f)
 champion_id_to_name = {v['key']: k for k, v in champion_data['data'].items()}
-limit = 10
-
-uuid = get_summoner_id(summoner_name)
-match_history = get_match_history(uuid,limit)
-print(match_history)
-
-matches_with_summoners, match_details = get_matches_with_summoners(match_history,summoner_names)\
-
-for match_id in matches_with_summoners:
-    details = get_match_details(match_id, summoner_names)
-    if details is not None:
-        print(f"Match {match_id}:")
-        for summoner_name, detail in details.items():
-            print(f"  {summoner_name} - {'Win' if detail['win'] else 'Loss'}, Champion: {detail['champion']}")
-    else:
-        print(f"Could not retrieve details for match {match_id}.")
-
-
-#summoner_name = "LightNephilim" 
-#print(get_match_history(get_summoner_id(summoner_name),20))
-
-print(get_matches_with_summoners(get_match_history(get_summoner_id("Zero Jg Pressure"),limit),summoner_names))
