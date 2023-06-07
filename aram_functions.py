@@ -25,15 +25,12 @@ def download_champion_data():
         print("Error Code", response.status_code)
         return None
 
-def get_summoner_id(summoner_name,api_call_counter):
+def get_summoner_id(summoner_name):
     base_url = f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner_name}"
     headers = {
         "X-Riot-Token": API_KEY
     }
     response = requests.get(base_url, headers=headers)
-    
-    api_call_counter += 1
-    print(f"API calls made: {api_call_counter} - get_summoner_id")
 
     if response.status_code == 200:
         data = response.json()
@@ -42,17 +39,15 @@ def get_summoner_id(summoner_name,api_call_counter):
         print("Error Code", response.status_code)
         return None
     
-def get_match_history(summoner_name,limit,api_call_counter):
+def get_match_history(summoner_name,limit):
 
-    puuid = get_summoner_id(summoner_name,api_call_counter)
+    puuid = get_summoner_id(summoner_name)
     base_url = f"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={limit}"
     headers = {
         "X-Riot-Token": API_KEY
     }
     response = requests.get(base_url, headers=headers)
 
-    api_call_counter += 1
-    print(f"API calls made: {api_call_counter} - get_match_history")
 
     if response.status_code == 200:
         data = response.json()
@@ -65,7 +60,7 @@ def get_match_history(summoner_name,limit,api_call_counter):
         return(None)
 
 
-def get_matches_with_summoners(match_ids, summoner_names,api_call_counter):
+def get_matches_with_summoners(match_ids, summoner_names):
     """Find matches where all the specified summoners participated."""
     matches_with_summoners = []
     match_details = []  # list to hold match details
@@ -77,8 +72,7 @@ def get_matches_with_summoners(match_ids, summoner_names,api_call_counter):
         }
         response = requests.get(base_url, headers=headers)
 
-        api_call_counter += 1
-        print(f"API calls made: {api_call_counter} - get_matches_with_summoners")
+    
         # Add a delay after each request to prevent hitting rate limit
         time.sleep(1.2)
 
@@ -114,7 +108,28 @@ def get_matches_with_summoners(match_ids, summoner_names,api_call_counter):
     
     return matches_with_summoners, match_details, win_rate
 
+def consolidate_details(match_details):
+    consolidated_details = {}
+    for detail in match_details:
+        match_id = detail['match_id']
+        if match_id not in consolidated_details:
+            consolidated_details[match_id] = {
+                'game_creation': detail['game_creation'],
+                'win': detail['win'],
+                'summoner_details': {}
+            }
+        summoner_name = detail['summoner_name']
+        summoner_details = {
+            'champion': detail['champion'],
+            'kills': detail['kills'],
+            'assists': detail['assists'],
+            'deaths': detail['deaths'],
+            'champ_damage': detail['champ_damage']
+        }
+        consolidated_details[match_id]['summoner_details'][summoner_name] = summoner_details
 
+    return consolidated_details
+    
 #champion_data = download_champion_data()
 with open('champion.json', 'r') as f:
     champion_data = json.load(f)
