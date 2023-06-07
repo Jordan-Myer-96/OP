@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LoL Highest Mastery</title>
+</head>
+<body>
+    <form method="POST">
+        <input type="text" name="summoner_name" required>
+        <input type="submit" value="Get highest mastery">
+    </form>
+
+    {% if champion_name %}
+    <h2>Highest Mastery Champion for Summoner: {{champion_name}}, Points: {{points}}</h2>
+    <img src="http://ddragon.leagueoflegends.com/cdn/img/champion/splash/{{champion_key}}_0.jpg" alt="{{champion_name}}">
+    {% endif %}
+</body>
+</html>
