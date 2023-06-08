@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from aram_functions import get_summoner_id, get_match_history, get_matches_with_summoners, consolidate_details
-
 # Function to handle the button click event
 # Function to handle the button click event
 def search_matches():
